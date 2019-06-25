@@ -13,7 +13,8 @@ import operator
 import sys
 from optparse import OptionParser
 
-#download_IERS_A()
+# download_IERS_A()
+
 
 def unpackTuple(tup):
 
@@ -260,10 +261,11 @@ def cross_scan(center, width, duration, start_time, time_step, position_angle, p
         plt.scatter(altaz.az.deg, altaz.alt.deg, color="r")
         plt.ylabel('Alt')
         plt.xlabel('Az')
-    #
+
     #print(len(t), len(x), len(y), len(v_time))
     for i in range(len(v_time)):
-        print("{0} {1:3.8f} {2:3.8f} {3}".format(t[i].isot, x[i], y[i], f[i]))
+        print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(
+            t[i].isot, x[i], y[i], f[i], 0))
     if plot == 1:
         plt.show()
 
@@ -272,11 +274,13 @@ def coor_convertion(ra, dec, frame, time, input_lat, input_lon, alt, plot):
     sc = SkyCoord(ra, dec, unit='deg', frame=frame, equinox="J2000")
     prototype_dish = EarthLocation(
         lat=input_lat * u.deg, lon=input_lon * u.deg, height=alt * u.m)
+    prototype_dish_observer = Observer(location=prototype_dish)
+
     source_altaz = sc.transform_to(
         AltAz(obstime=time, location=prototype_dish))
     for i in range(len(source_altaz)):
-        print("{0} {1:3.8f} {2:3.8f} {3}".format(time[i].isot, source_altaz[i].az.deg,
-                                                 source_altaz[i].alt.deg, 1), file=sys.stdout, flush=True)
+        print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(time[i].isot, source_altaz[i].az.deg,
+                                                 source_altaz[i].alt.deg, 1, prototype_dish_observer.parallactic_angle(time=time[i], target=sc).deg, file=sys.stdout, flush=True))
     if plot == 1:
         plt.scatter(source_altaz.az.deg, source_altaz.alt.deg)
         plt.show()
@@ -326,7 +330,6 @@ def main():
                       help='length of the cross scan')
     parser.add_option('--dry-run', dest='dry_run', default=None, type=str,
                       help='dry run for SCU testing, passing "OK?"" will print out "OK!"')
-    (opts, args) = parser.parse_args()
 
     # parser.add_option('-a', '--lat', dest='lat', type=float,
     #                  help='latitude of the observatory in deg')
@@ -369,7 +372,7 @@ def main():
         cross_scan(bore_sight, length * u.deg, duration, start_time,
                    time_step, rotation, plot, lat, lon, alt)
     else:
-        print("invaild scan mode {}".format(opts.type))
+        print("invaild scan mode '{}', available scan types are : 'OTF', 'track' & 'cross_scan'".format(opts.type))
 
 if __name__ == "__main__":
     main()
