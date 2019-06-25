@@ -5,8 +5,7 @@ import numpy as np
 from astropy import wcs
 from astropy.time import Time
 from astroplan import Observer
-#from astroplan import download_IERS_A
-# download_IERS_A()
+from astroplan import download_IERS_A
 from astropy.coordinates import SkyCoord, EarthLocation, AltAz
 from astropy.coordinates import ICRS, Galactic, FK4, FK5
 from functools import reduce
@@ -14,6 +13,7 @@ import operator
 import sys
 from optparse import OptionParser
 
+#download_IERS_A()
 
 def unpackTuple(tup):
 
@@ -70,10 +70,12 @@ def cal_track_OTF(bore_sight, frame, time_step, start_time, step, lat, lon, alt,
     prototype_dish = EarthLocation(
         lat=lat * u.deg, lon=lon * u.deg, height=alt * u.m)
     if frame == "altaz":
-        centriod = SkyCoord(bore_sight[0], bore_sight[1], unit='deg', frame="altaz", location=prototype_dish, obstime=Time.now())
+        centriod = SkyCoord(bore_sight[0], bore_sight[
+                            1], unit='deg', frame="altaz", location=prototype_dish, obstime=Time.now())
         bore_sight = (centriod.icrs.ra.deg, centriod.icrs.dec.deg)
     elif frame == "galactic" or frame == "ircs":
-        centriod = SkyCoord(bore_sight[0], bore_sight[1], unit='deg', frame=frame)
+        centriod = SkyCoord(bore_sight[0], bore_sight[
+                            1], unit='deg', frame=frame)
         bore_sight = (centriod.icrs.ra.deg, centriod.icrs.dec.deg)
 
     step_y = int(np.ceil((y_length / seperation)))
@@ -140,7 +142,7 @@ def cal_track_OTF(bore_sight, frame, time_step, start_time, step, lat, lon, alt,
         plt.ylabel("y")
         plt.plot(x, y, "-o")
         plt.scatter(x, y)
-    
+
     data = convert_pixel_coordinate_to_equatorial(
         pixel_coordinates, bore_sight)
 
@@ -197,8 +199,6 @@ def cal_track_OTF(bore_sight, frame, time_step, start_time, step, lat, lon, alt,
     #print("{0} {1:3.8f} {2:3.8f}".format(time.isot, source_altaz.az.deg, source_altaz.alt.deg), file=sys.stdout, flush=True)
     if plot == 1:
         plt.show()
-
-
 
 
 def cross_scan(center, width, duration, start_time, time_step, position_angle, plot, lat, lon, alt):
@@ -324,6 +324,8 @@ def main():
                       help='duration of the scan')
     parser.add_option('--length', dest='length', default=1, type=float,
                       help='length of the cross scan')
+    parser.add_option('--dry-run', dest='dry_run', default=None, type=str,
+                      help='dry run for SCU testing, passing "OK?"" will print out "OK!"')
     (opts, args) = parser.parse_args()
 
     # parser.add_option('-a', '--lat', dest='lat', type=float,
@@ -350,7 +352,10 @@ def main():
     duration = opts.duration
     length = opts.length
     plot = opts.plot
-    if opts.type == "OTF":
+    if opts.dry_run == "OK?":
+        print("OK!")
+        return
+    elif opts.type == "OTF":
         cal_track_OTF(bore_sight, frame, time_step, start_time, seperation, lat,
                       lon, alt, rotation, x_length, y_length, seperation, plot)
     elif opts.type == "track":
