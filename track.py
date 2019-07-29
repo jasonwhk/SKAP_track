@@ -67,7 +67,7 @@ def rotate(point, angle):
     return qx, qy
 
 
-def cal_track_OTF(bore_sight, frame, time_step, start_time, step, lat, lon, alt, rotation, x_length, y_length, seperation, plot):
+def OTF(bore_sight, frame, time_step, start_time, step, lat, lon, alt, rotation, x_length, y_length, seperation, plot):
     prototype_dish = EarthLocation(
         lat=lat * u.deg, lon=lon * u.deg, height=alt * u.m)
     if frame == "altaz":
@@ -221,6 +221,7 @@ def cross_scan(center, width, duration, start_time, time_step, position_angle, p
     #center = SkyCoord(x_val[0], y_val[0], unit='deg', frame="icrs")
     prototype_dish = EarthLocation(
         lat=lat * u.deg, lon=lon * u.deg, height=alt * u.m)
+    prototype_dish_observer = Observer(location=prototype_dish)
     altaz = c1.transform_to(
         AltAz(obstime=start_time, location=prototype_dish))
     # print(altaz.alt.deg)
@@ -261,16 +262,21 @@ def cross_scan(center, width, duration, start_time, time_step, position_angle, p
         plt.scatter(altaz.az.deg, altaz.alt.deg, color="r")
         plt.ylabel('Alt')
         plt.xlabel('Az')
-
+    #prototype_dish_observer.parallactic_angle(time=time[i], target=sc).deg
     #print(len(t), len(x), len(y), len(v_time))
+
     for i in range(len(v_time)):
+        #print(x[i], y[i])
+        altaz = SkyCoord(x[i], y[i], unit='deg', frame="altaz", obstime=v_time[i], location=prototype_dish)
+        #altaz = AltAz(np.deg2rad(x[i])*u.rad, np.deg2rad(y[i])*u.rad:, obstime=v_time[i], location=prototype_dish)
+        sc = altaz.transform_to('icrs')
         print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(
-            t[i].isot, x[i], y[i], f[i], 0))
+            t[i].isot, x[i], x[i], f[i], prototype_dish_observer.parallactic_angle(time=v_time[i], target=sc).deg))
     if plot == 1:
         plt.show()
 
 
-def coor_convertion(ra, dec, frame, time, input_lat, input_lon, alt, plot):
+def simple_track(ra, dec, frame, time, input_lat, input_lon, alt, plot):
     sc = SkyCoord(ra, dec, unit='deg', frame=frame, equinox="J2000")
     prototype_dish = EarthLocation(
         lat=input_lat * u.deg, lon=input_lon * u.deg, height=alt * u.m)
@@ -280,21 +286,10 @@ def coor_convertion(ra, dec, frame, time, input_lat, input_lon, alt, plot):
         AltAz(obstime=time, location=prototype_dish))
     for i in range(len(source_altaz)):
         print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(time[i].isot, source_altaz[i].az.deg,
-                                                 source_altaz[i].alt.deg, 1, prototype_dish_observer.parallactic_angle(time=time[i], target=sc).deg, file=sys.stdout, flush=True))
+                                                     source_altaz[i].alt.deg, 1, prototype_dish_observer.parallactic_angle(time=time[i], target=sc).deg, file=sys.stdout, flush=True))
     if plot == 1:
         plt.scatter(source_altaz.az.deg, source_altaz.alt.deg)
         plt.show()
-
-
-def batch(iterable, n=1):
-    current_batch = []
-    for item in iterable:
-        current_batch.append(item)
-        if len(current_batch) == n:
-            yield current_batch
-            current_batch = []
-    if current_batch:
-        yield current_batch
 
 
 def main():
@@ -305,31 +300,31 @@ def main():
     parser.add_option('--dec', dest='dec', default=30, type=float,
                       help='y of the source in deg')
     parser.add_option('--frame', dest='frame', default='icrs', type=str,
-                      help='coordinate frame (icrs, fk5, fk4, galactic, altaz')
+                      help='Coordinate frame (icrs, fk5, fk4, galactic, altaz')
     parser.add_option('--start', dest='start', default=Time.now(), type=str,
-                      help='start time in ISO8601 UTC format')
+                      help='Start time in ISO8601 UTC format')
     parser.add_option('--end', dest='end', default=Time.now() + 600 * u.s, type=str,
-                      help='end time in ISO8601 UTC format')
+                      help='End time in ISO8601 UTC format')
     parser.add_option('--step', dest='step', default=0.5, type=float,
                       help='time step in second')
     parser.add_option('--rotation', dest='rotation', default=0, type=float,
-                      help='rotation in degree, anti-clockwise')
+                      help='Rotation in degree, anti-clockwise')
     parser.add_option('--xlength', dest='x_length', default=1, type=float,
                       help='x length in degrees')
     parser.add_option('--ylength', dest='y_length', default=1, type=float,
                       help='y length in degrees')
     parser.add_option('--seperation', dest='seperation', default=0.1, type=float,
-                      help='seperation in degrees in between OTF points')
+                      help='Seperation in degrees in between OTF points')
     parser.add_option('--scantype', dest='type', default="track", type=str,
-                      help='Scan type, track or OTF for now')
+                      help='Scan type (track, OTF or cross_scan) for now')
     parser.add_option('--plot', dest='plot', default=0, type=int,
-                      help='Plot or not')
+                      help='Plot the scan pattern or not, default = 0')
     parser.add_option('--duration', dest='duration', default=30, type=float,
-                      help='duration of the scan')
+                      help='Duration of the scan')
     parser.add_option('--length', dest='length', default=1, type=float,
-                      help='length of the cross scan')
+                      help='Length of the cross scan')
     parser.add_option('--dry-run', dest='dry_run', default=None, type=str,
-                      help='dry run for SCU testing, passing "OK?"" will print out "OK!"')
+                      help='Dry run for SCU testing, passing "OK?"" will print out "OK!"')
 
     # parser.add_option('-a', '--lat', dest='lat', type=float,
     #                  help='latitude of the observatory in deg')
@@ -359,15 +354,15 @@ def main():
         print("OK!")
         return
     elif opts.type == "OTF":
-        cal_track_OTF(bore_sight, frame, time_step, start_time, seperation, lat,
-                      lon, alt, rotation, x_length, y_length, seperation, plot)
+        OTF(bore_sight, frame, time_step, start_time, seperation, lat,
+            lon, alt, rotation, x_length, y_length, seperation, plot)
     elif opts.type == "track":
         t_start, t_end = Time(opts.start), Time(opts.end) + 1 * u.s
         duration = t_end - t_start
         bins = np.ceil(duration.sec / opts.step)
         v_time = [t_start + i * u.s * opts.step for i in range(0, int(bins))]
-        coor_convertion(ra, dec, frame, v_time,
-                        lat, lon, alt, plot)
+        simple_track(ra, dec, frame, v_time,
+                     lat, lon, alt, plot)
     elif opts.type == "cross_scan":
         cross_scan(bore_sight, length * u.deg, duration, start_time,
                    time_step, rotation, plot, lat, lon, alt)
