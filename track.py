@@ -267,8 +267,10 @@ def cross_scan(center, width, duration, start_time, time_step, position_angle, p
 
     for i in range(len(v_time)):
         #print(x[i], y[i])
-        altaz = SkyCoord(x[i], y[i], unit='deg', frame="altaz", obstime=v_time[i], location=prototype_dish)
-        #altaz = AltAz(np.deg2rad(x[i])*u.rad, np.deg2rad(y[i])*u.rad:, obstime=v_time[i], location=prototype_dish)
+        altaz = SkyCoord(x[i], y[i], unit='deg', frame="altaz",
+                         obstime=v_time[i], location=prototype_dish)
+        # altaz = AltAz(np.deg2rad(x[i])*u.rad, np.deg2rad(y[i])*u.rad:,
+        # obstime=v_time[i], location=prototype_dish)
         sc = altaz.transform_to('icrs')
         print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(
             t[i].isot, x[i], x[i], f[i], prototype_dish_observer.parallactic_angle(time=v_time[i], target=sc).deg))
@@ -277,9 +279,11 @@ def cross_scan(center, width, duration, start_time, time_step, position_angle, p
 
 
 def simple_track(ra, dec, frame, time, input_lat, input_lon, alt, plot):
-    sc = SkyCoord(ra, dec, unit='deg', frame=frame, equinox="J2000")
     prototype_dish = EarthLocation(
         lat=input_lat * u.deg, lon=input_lon * u.deg, height=alt * u.m)
+    sc = SkyCoord(ra, dec, unit='deg', frame=frame, equinox="J2000",
+                  obstime=time[0], location=prototype_dish)
+    sc = sc.transform_to('icrs')
     prototype_dish_observer = Observer(location=prototype_dish)
 
     source_altaz = sc.transform_to(
@@ -295,9 +299,9 @@ def simple_track(ra, dec, frame, time, input_lat, input_lon, alt, plot):
 def main():
     usage = "usage: %prog [options]"
     parser = OptionParser(usage=usage)
-    parser.add_option('--ra', dest='ra', default=20, type=float,
+    parser.add_option('--x', dest='x', default=20, type=float,
                       help='x of the source in deg')
-    parser.add_option('--dec', dest='dec', default=30, type=float,
+    parser.add_option('--y', dest='y', default=30, type=float,
                       help='y of the source in deg')
     parser.add_option('--frame', dest='frame', default='icrs', type=str,
                       help='Coordinate frame (icrs, fk5, fk4, galactic, altaz')
@@ -335,9 +339,9 @@ def main():
     (opts, args) = parser.parse_args()
 
     seperation = 0.1  # seperation between points
-    ra = opts.ra
-    dec = opts.dec
-    bore_sight = (ra, dec)
+    x = opts.x
+    y = opts.y
+    bore_sight = (x, y)
     time_step = opts.step
     lat = -30.712
     lon = 21.411
