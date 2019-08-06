@@ -365,7 +365,7 @@ def main():
         duration = t_end - t_start
         bins = np.ceil(duration.sec / opts.step)
         v_time = [t_start + i * u.s * opts.step for i in range(0, int(bins))]
-        simple_track(ra, dec, frame, v_time,
+        simple_track(x, y, frame, v_time,
                      lat, lon, alt, plot)
     elif opts.type == "cross_scan":
         cross_scan(bore_sight, length * u.deg, duration, start_time,
