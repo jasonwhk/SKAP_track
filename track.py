@@ -195,7 +195,7 @@ def OTF(bore_sight, frame, time_step, start_time, step, lat, lon, alt, rotation,
     #print("total scan time {}s".format((v_time[-1]- v_time[0])*86400))
     converted = list(zip(az, alt, v_time, z))
     for i in range(len(converted)):
-        print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(converted[i][2].isot, converted[
+        print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(converted[i][2].mjd, converted[
               i][0], converted[i][1], converted[i][3], parallactic_angle.deg[i]), file=sys.stdout, flush=True)
     #print("{0} {1:3.8f} {2:3.8f}".format(time.isot, source_altaz.az.deg, source_altaz.alt.deg), file=sys.stdout, flush=True)
     if plot == 1:
@@ -273,7 +273,7 @@ def cross_scan(center, width, duration, start_time, time_step, position_angle, p
         # obstime=v_time[i], location=prototype_dish)
         sc = altaz.transform_to('icrs')
         print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(
-            t[i].isot, x[i], x[i], f[i], prototype_dish_observer.parallactic_angle(time=v_time[i], target=sc).deg))
+            t[i].mjd, x[i], x[i], f[i], prototype_dish_observer.parallactic_angle(time=v_time[i], target=sc).deg))
     if plot == 1:
         plt.show()
 
@@ -289,7 +289,7 @@ def simple_track(ra, dec, frame, time, input_lat, input_lon, alt, plot):
     source_altaz = sc.transform_to(
         AltAz(obstime=time, location=prototype_dish))
     for i in range(len(source_altaz)):
-        print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(time[i].isot, source_altaz[i].az.deg,
+        print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(time[i].mjd, source_altaz[i].az.deg,
                                                      source_altaz[i].alt.deg, 1, prototype_dish_observer.parallactic_angle(time=time[i], target=sc).deg, file=sys.stdout, flush=True))
     if plot == 1:
         plt.scatter(source_altaz.az.deg, source_altaz.alt.deg)
