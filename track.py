@@ -12,8 +12,9 @@ from functools import reduce
 import operator
 import sys
 from optparse import OptionParser
+from astropy.utils import iers
 
-download_IERS_A()
+#download_IERS_A()
 
 def unpackTuple(tup):
 
