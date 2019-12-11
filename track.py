@@ -13,8 +13,7 @@ import operator
 import sys
 from optparse import OptionParser
 
-# download_IERS_A()
-
+download_IERS_A()
 
 def unpackTuple(tup):
 
