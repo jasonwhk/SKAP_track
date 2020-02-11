@@ -273,7 +273,7 @@ def cross_scan(center, width, duration, start_time, time_step, position_angle, p
         # obstime=v_time[i], location=prototype_dish)
         sc = altaz.transform_to('icrs')
         print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(
-            t[i].mjd, x[i], x[i], f[i], prototype_dish_observer.parallactic_angle(time=v_time[i], target=sc).deg))
+            t[i].mjd, x[i], y[i], f[i], prototype_dish_observer.parallactic_angle(time=v_time[i], target=sc).deg))
     if plot == 1:
         plt.show()
 
@@ -289,8 +289,11 @@ def simple_track(ra, dec, frame, time, input_lat, input_lon, alt, plot):
     source_altaz = sc.transform_to(
         AltAz(obstime=time, location=prototype_dish))
     for i in range(len(source_altaz)):
-        print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(time[i].mjd, source_altaz[i].az.deg,
-                                                     source_altaz[i].alt.deg, 1, prototype_dish_observer.parallactic_angle(time=time[i], target=sc).deg, file=sys.stdout, flush=True))
+        if source_altaz[i].alt.deg > 20.0:
+            print("{0} {1:3.8f} {2:3.8f} {3} {4}".format(time[i].mjd, source_altaz[i].az.deg,
+                                                   source_altaz[i].alt.deg, 1, prototype_dish_observer.parallactic_angle(time=time[i], target=sc).deg, file=sys.stdout, flush=True))
+        else:
+            break
     if plot == 1:
         plt.scatter(source_altaz.az.deg, source_altaz.alt.deg)
         plt.show()
@@ -307,7 +310,7 @@ def main():
                       help='Coordinate frame (icrs, fk5, fk4, galactic, altaz')
     parser.add_option('--start', dest='start', default=Time.now(), type=str,
                       help='Start time in ISO8601 UTC format')
-    parser.add_option('--end', dest='end', default=Time.now() + 600 * u.s, type=str,
+    parser.add_option('--end', dest='end', default=Time.now() + 60 * u.s, type=str,
                       help='End time in ISO8601 UTC format')
     parser.add_option('--step', dest='step', default=0.5, type=float,
                       help='time step in second')
@@ -363,7 +366,9 @@ def main():
     elif opts.type == "track":
         t_start, t_end = Time(opts.start), Time(opts.end) + 1 * u.s
         duration = t_end - t_start
-        bins = np.ceil(duration.sec / opts.step)
+        duration = opts.duration
+        #bins = np.ceil(duration.sec / opts.step)
+        bins = np.ceil(duration / opts.step)
         v_time = [t_start + i * u.s * opts.step for i in range(0, int(bins))]
         simple_track(x, y, frame, v_time,
                      lat, lon, alt, plot)
